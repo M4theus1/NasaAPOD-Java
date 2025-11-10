@@ -1,0 +1,31 @@
+<h1>{{ title }}</h1>
+
+<div class="date-selector">
+  <label for="date">Escolha uma data:</label>
+  <input id="date" type="date" [(ngModel)]="selectedDate" />
+  <button (click)="loadApod()">Carregar</button>
+</div>
+
+<hr />
+
+<div *ngIf="apod; else loading">
+  <h2>{{ apod.title }}</h2>
+  <p><strong>Data:</strong> {{ apod.date }}</p>
+
+  <img *ngIf="apod.media_type === 'image'" [src]="apod.url" alt="{{ apod.title }}" width="500" />
+
+  <iframe
+    *ngIf="apod.media_type === 'video'"
+    width="500"
+    height="300"
+    [src]="apod.url | safeUrl"
+    frameborder="0"
+    allowfullscreen>
+  </iframe>
+
+  <p>{{ apod.explanation }}</p>
+</div>
+
+<ng-template #loading>
+  <p>Carregando a Imagem Astronômica do Dia...</p>
+</ng-template>

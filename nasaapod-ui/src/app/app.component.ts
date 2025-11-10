@@ -1,31 +1,26 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ApodService, Apod } from './services/apod';
+import { Component } from '@angular/core';
+import { ApodComponent } from './services/apod.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  imports: [ApodComponent], // importa o componente principal da NASA
+  template: `
+    <main class="app-container">
+      <app-apod></app-apod>
+    </main>
+  `,
+  styles: [`
+    .app-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      background-color: #000;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      padding: 2rem;
+    }
+  `]
 })
-export class AppComponent implements OnInit {
-  title = 'nasaapod-ui';
-  apod?: Apod;
-  selectedDate: string = '';
-
-  constructor(private apodService: ApodService) {}
-
-  ngOnInit() {
-    // Load today's APOD by default
-    this.loadApod();
-  }
-
-  loadApod() {
-    this.apodService.getApod(this.selectedDate).subscribe({
-      next: (data) => (this.apod = data),
-      error: (err) => console.error('❌ Error loading APOD:', err)
-    });
-  }
-}
+export class AppComponent {}
