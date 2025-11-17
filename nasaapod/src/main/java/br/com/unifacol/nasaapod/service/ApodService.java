@@ -1,5 +1,6 @@
 package br.com.unifacol.nasaapod.service;
 
+import br.com.unifacol.nasaapod.exception.InvalidDateException;
 import br.com.unifacol.nasaapod.model.ApodDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.concurrent.TimeoutException;
 
 @Service
 public class ApodService {
@@ -22,61 +23,59 @@ public class ApodService {
     @Value("${nasa.api.key}")
     private String apiKey;
 
+    private static final LocalDate MIN_DATE = LocalDate.of(1995, 6, 16);
+
     public ApodService(WebClient webClient) {
         this.webClient = webClient;
     }
 
     public ApodDto getApod(String date) {
-        String targetDate = date != null ? date : LocalDate.now().toString();
+
+        LocalDate today = LocalDate.now();
+        LocalDate chosenDate = date != null ? LocalDate.parse(date) : today;
+
+        if (chosenDate.isBefore(MIN_DATE)) {
+            throw new InvalidDateException("A data mínima permitida é 1995-06-16.");
+        }
+
+        if (chosenDate.isAfter(today)) {
+            throw new InvalidDateException("A data não pode ser maior que a data atual.");
+        }
 
         try {
-            logger.info("Fetching APOD for date: {}", targetDate);
-
             return webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/planetary/apod")
                             .queryParam("api_key", apiKey)
-                            .queryParam("date", targetDate)
+                            .queryParam("date", chosenDate)
                             .queryParam("thumbs", true)
                             .build())
                     .retrieve()
                     .bodyToMono(ApodDto.class)
-                    .timeout(Duration.ofSeconds(25)) // Reduced timeout to 10 seconds
-                    .onErrorResume(TimeoutException.class, e -> {
-                        logger.warn("Request timeout for date {} after 10 seconds", targetDate);
-                        return Mono.just(createFallbackApod(targetDate,
-                                "Request timeout - NASA API is not responding quickly"));
-                    })
-                    .onErrorResume(WebClientResponseException.class, e -> {
-                        logger.warn("NASA API error {} for date {}: {}",
-                                e.getStatusCode(), targetDate, e.getStatusText());
-                        return Mono.just(createFallbackApod(targetDate,
-                                "NASA API error - " + e.getStatusCode()));
-                    })
-                    .onErrorResume(Exception.class, e -> {
-                        logger.warn("Network error for date {}: {}", targetDate, e.getMessage());
-                        return Mono.just(createFallbackApod(targetDate,
-                                "Network connection issue"));
-                    })
-                    .block(Duration.ofSeconds(30)); // Slightly longer block timeout
+                    .timeout(Duration.ofSeconds(20))
+                    .onErrorResume(WebClientResponseException.class, e ->
+                            Mono.just(createFallbackApod(chosenDate.toString(),
+                                    "Erro da NASA API: " + e.getStatusCode()))
+                    )
+                    .onErrorResume(Exception.class, e ->
+                            Mono.just(createFallbackApod(chosenDate.toString(),
+                                    "Erro de rede ou servidor."))
+                    )
+                    .block();
 
         } catch (Exception e) {
-            logger.error("Unexpected error for date {}: {}", targetDate, e.getMessage());
-            return createFallbackApod(targetDate, "Unexpected error occurred");
+            return createFallbackApod(chosenDate.toString(), "Erro inesperado.");
         }
     }
 
     private ApodDto createFallbackApod(String date, String errorMessage) {
-        ApodDto fallback = new ApodDto();
-        fallback.setDate(date);
-        fallback.setTitle("Astronomy Picture of the Day");
-        fallback.setExplanation("We're unable to load the astronomy picture for " + date + ". " +
-                errorMessage + ". " +
-                "This is usually a temporary issue with NASA's API. " +
-                "Please try again in a few minutes.");
-        fallback.setUrl("");
-        fallback.setHdurl("");
-        fallback.setMedia_type("image");
-        return fallback;
+        ApodDto apod = new ApodDto();
+        apod.setDate(date);
+        apod.setTitle("Imagem não disponível");
+        apod.setExplanation(errorMessage);
+        apod.setUrl("");
+        apod.setHdurl("");
+        apod.setMedia_type("image");
+        return apod;
     }
 }

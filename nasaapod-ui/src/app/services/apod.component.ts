@@ -14,20 +14,35 @@ export class ApodComponent {
 
   selectedDate: string = '';
   apod: any = null;
+  errorMessage: string | null = null;
   isZoomed = false;
+
+  today: string = new Date().toISOString().split('T')[0];
 
   constructor(private http: HttpClient) {}
 
   loadApod() {
     if (!this.selectedDate) return;
 
-    const apiKey = 'UNJuHm4kjwmt56mFn0M2NChggklhgwaQ2owl6rlE';
-    const url = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&date=${this.selectedDate}`;
-    
-    this.http.get(url).subscribe(data => {
-      this.apod = data;
-      this.isZoomed = false;
-    });
+    this.http.get(`http://localhost:8080/api/apod?date=${this.selectedDate}`)
+      .subscribe({
+        next: (data: any) => {
+          this.apod = data;
+          this.errorMessage = null;
+          this.isZoomed = false;
+        },
+        error: (err) => {
+          this.apod = null;
+
+          if (err.error?.error) {
+            this.errorMessage = err.error.error;
+          } else if (err.error?.message) {
+            this.errorMessage = err.error.message;
+          } else {
+            this.errorMessage = "Erro inesperado.";
+          }
+        }
+      });
   }
 
   toggleZoom() {

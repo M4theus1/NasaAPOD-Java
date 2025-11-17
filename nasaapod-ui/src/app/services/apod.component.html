@@ -4,36 +4,36 @@
   <h3 class="subtitle">Explore o universo, uma imagem por dia.</h3>
 
   <div class="date-card">
+    <label class="date-label">Escolha uma data:</label>
 
-    <div class="date-line">
-      <label class="date-label">Escolha uma data:</label>
-
-      <input
-        type="date"
-        [(ngModel)]="selectedDate"
-        (change)="loadApod()"
-        class="date-input"
-      />
-    </div>
+    <input
+      type="date"
+      [(ngModel)]="selectedDate"
+      (change)="loadApod()"
+      class="date-input"
+      min="1995-06-16"
+      [max]="today"
+    />
 
     <div class="chosen-date" *ngIf="selectedDate">
       Data escolhida: {{ selectedDate }}
     </div>
-
   </div>
 
-  <div class="content">
-    
+  <div class="error-box" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <div class="content" *ngIf="apod">
+
     <div class="media-block">
 
       <div class="zoom-overlay" *ngIf="isZoomed" (click)="toggleZoom()"></div>
 
-      <button *ngIf="isZoomed" class="zoom-close-btn" (click)="toggleZoom()">
-        ✕
-      </button>
+      <button *ngIf="isZoomed" class="zoom-close-btn" (click)="toggleZoom()">✕</button>
 
       <img
-        *ngIf="apod?.media_type === 'image'"
+        *ngIf="apod.media_type === 'image'"
         class="zoom-image"
         [src]="apod.url"
         alt="{{ apod.title }}"
@@ -42,7 +42,7 @@
       />
 
       <iframe
-        *ngIf="apod?.media_type === 'video'"
+        *ngIf="apod.media_type === 'video'"
         [src]="apod.url"
         frameborder="0"
         allowfullscreen
@@ -50,7 +50,7 @@
 
     </div>
 
-    <div class="text-block" *ngIf="apod">
+    <div class="text-block">
       <h2>{{ apod.title }}</h2>
       <p>{{ apod.explanation }}</p>
     </div>

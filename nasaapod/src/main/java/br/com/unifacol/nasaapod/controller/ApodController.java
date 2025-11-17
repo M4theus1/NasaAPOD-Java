@@ -1,6 +1,5 @@
 package br.com.unifacol.nasaapod.controller;
 
-import br.com.unifacol.nasaapod.model.ApodDto;
 import br.com.unifacol.nasaapod.service.ApodService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +17,6 @@ public class ApodController {
 
     @GetMapping
     public ResponseEntity<?> getApod(@RequestParam(required = false) String date) {
-        // If date is null, use today’s date
         return ResponseEntity.ok(apodService.getApod(date));
     }
 }
-
