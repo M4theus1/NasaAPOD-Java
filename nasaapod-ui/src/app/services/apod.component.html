@@ -1,0 +1,60 @@
+<div class="page">
+
+  <h1 class="title">NASA Astronomy Picture of the Day</h1>
+  <h3 class="subtitle">Explore o universo, uma imagem por dia.</h3>
+
+  <div class="date-card">
+
+    <div class="date-line">
+      <label class="date-label">Escolha uma data:</label>
+
+      <input
+        type="date"
+        [(ngModel)]="selectedDate"
+        (change)="loadApod()"
+        class="date-input"
+      />
+    </div>
+
+    <div class="chosen-date" *ngIf="selectedDate">
+      Data escolhida: {{ selectedDate }}
+    </div>
+
+  </div>
+
+  <div class="content">
+    
+    <div class="media-block">
+
+      <div class="zoom-overlay" *ngIf="isZoomed" (click)="toggleZoom()"></div>
+
+      <button *ngIf="isZoomed" class="zoom-close-btn" (click)="toggleZoom()">
+        ✕
+      </button>
+
+      <img
+        *ngIf="apod?.media_type === 'image'"
+        class="zoom-image"
+        [src]="apod.url"
+        alt="{{ apod.title }}"
+        (click)="toggleZoom()"
+        [class.zoomed]="isZoomed"
+      />
+
+      <iframe
+        *ngIf="apod?.media_type === 'video'"
+        [src]="apod.url"
+        frameborder="0"
+        allowfullscreen
+      ></iframe>
+
+    </div>
+
+    <div class="text-block" *ngIf="apod">
+      <h2>{{ apod.title }}</h2>
+      <p>{{ apod.explanation }}</p>
+    </div>
+
+  </div>
+
+</div>

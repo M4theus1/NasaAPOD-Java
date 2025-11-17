@@ -1,32 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-import { NasaService } from './nasa.service';
-import { SafeUrlPipe } from './safe-url.pipe'; // ✅ novo import
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-apod',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, SafeUrlPipe], // ✅ adicionado aqui
-  templateUrl: './apod.html',
-  styleUrls: ['./apod.css']
+  imports: [CommonModule, FormsModule],
+  templateUrl: './apod.component.html',
+  styleUrls: ['./apod.component.css']
 })
-export class ApodComponent implements OnInit {
-  title = 'NASA Astronomy Picture of the Day';
-  apod: any;
+export class ApodComponent {
+
   selectedDate: string = '';
+  apod: any = null;
+  isZoomed = false;
 
-  constructor(private nasaService: NasaService) {}
-
-  ngOnInit() {
-    this.loadApod();
-  }
+  constructor(private http: HttpClient) {}
 
   loadApod() {
-    this.nasaService.getApod(this.selectedDate).subscribe({
-      next: (data) => (this.apod = data),
-      error: (err) => console.error('❌ Erro ao carregar APOD:', err)
+    if (!this.selectedDate) return;
+
+    const apiKey = 'UNJuHm4kjwmt56mFn0M2NChggklhgwaQ2owl6rlE';
+    const url = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&date=${this.selectedDate}`;
+    
+    this.http.get(url).subscribe(data => {
+      this.apod = data;
+      this.isZoomed = false;
     });
+  }
+
+  toggleZoom() {
+    this.isZoomed = !this.isZoomed;
   }
 }
